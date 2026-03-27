@@ -1,0 +1,24 @@
+{
+  "user": "GITHUB_ACTION_USER",
+  "permissions": [
+    {
+      "grant_type": "ROLE",
+      "role_name": "GITHUB_ACTION_ROLE"
+    },
+    {
+      "grant_type": "DATABASE",
+      "object_name": "MY_DATABASE",
+      "privileges": ["USAGE"]
+    },
+    {
+      "grant_type": "SCHEMA",
+      "object_name": "MY_SCHEMA",
+      "privileges": ["USAGE"]
+    },
+    {
+      "grant_type": "TABLE",
+      "object_name": "GITHUB_ACTION_TEST",
+      "privileges": ["SELECT"]
+    }
+  ]
+}
