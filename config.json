@@ -1,5 +1,5 @@
 {
-  "user": "TEST12345",
+  "user": "GITHUB_ACTION_USER",
   "permissions": [
     {
       "grant_type": "ROLE",
