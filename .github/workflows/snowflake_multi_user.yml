@@ -22,9 +22,6 @@ jobs:
  
       - name: Install Snowflake Connector
         run: pip install snowflake-connector-python
- 
-      - name: Install dependencies
-        run: pip install snowflake-connector-python
 
       - name: Run Multi User Access Script
         env:
