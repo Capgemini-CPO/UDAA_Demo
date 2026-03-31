@@ -11,16 +11,16 @@ SNOWFLAKE_DATABASE = os.environ["SNOWFLAKE_DATABASE"]
 SNOWFLAKE_SCHEMA = os.environ["SNOWFLAKE_SCHEMA"]
 SNOWFLAKE_ROLE = os.environ["SNOWFLAKE_ROLE"]
 
-# ✅ Multi-user input (comma-separated)
-TARGET_USERS = os.environ.get("TARGET_USERS")
+# Multi-user list from GitHub Actions
+TARGET_USERS = os.environ.get("TARGET_USERS")  
 
 if not TARGET_USERS:
     raise Exception("ERROR: TARGET_USERS environment variable is missing.")
 
-# Convert "user1,user2,user3" → ["user1", "user2", "user3"]
+# Convert comma-separated list to Python list
 TARGET_USERS = [u.strip() for u in TARGET_USERS.split(",")]
 
-print(f"Users to process: {TARGET_USERS}")
+print(f"\n Users to process: {TARGET_USERS}\n")
 
 # Connect to Snowflake
 conn = snowflake.connector.connect(
@@ -35,40 +35,41 @@ conn = snowflake.connector.connect(
 
 cur = conn.cursor()
 
-def grant_permission(permission_obj, username):
-    grant_type = permission_obj["grant_type"].upper()
+def grant_permission(permission, user):
+    """Grant permission to one user."""
+    grant_type = permission["grant_type"].upper()
 
     try:
         if grant_type == "ROLE":
-            sql = f"GRANT ROLE {permission_obj['role_name']} TO USER {username}"
+            sql = f"GRANT ROLE {permission['role_name']} TO USER {user}"
 
         elif grant_type in ["DATABASE", "SCHEMA", "TABLE", "VIEW", "WAREHOUSE"]:
-            privileges = ", ".join(permission_obj["privileges"])
-            sql = f"GRANT {privileges} ON {grant_type} {permission_obj['object_name']} TO USER {username}"
+            privs = ", ".join(permission["privileges"])
+            sql = f"GRANT {privs} ON {grant_type} {permission['object_name']} TO USER {user}"
 
         else:
-            print(f"Unsupported GRANT TYPE: {grant_type}")
+            print(f" Unsupported grant type: {grant_type}")
             return
 
-        print(f"Executing for {username}: {sql}")
+        print(f"Running: {sql}")
         cur.execute(sql)
-        print(f"✅ SUCCESS: Granted {grant_type} to {username}")
+        print(f" Granted {grant_type} to {user}")
 
     except Exception as e:
-        print(f"❌ ERROR granting {grant_type} to {username}: {str(e)}")
+        print(f" ERROR granting {grant_type} to {user}: {str(e)}")
 
 
-# Load permissions from JSON
-with open("config.json", "r") as f:
+# Load permissions
+with open("config.json") as f:
     permissions = json.load(f)["permissions"]
 
-# ✅ Loop through all users
+# Loop through all users and apply all permissions
 for user in TARGET_USERS:
-    print(f"\n=== Processing user: {user} ===")
+    print(f"\n============ Processing {user} ============\n")
     for perm in permissions:
         grant_permission(perm, user)
 
 cur.close()
 conn.close()
 
-print("\n✅ All users processed successfully.")
+print("\n ALL USERS PROCESSED SUCCESSFULLY \n")
