@@ -1,12 +1,11 @@
 name: Grant Multi User Access
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       target_users:
         description: "Comma-separated Snowflake usernames"
         required: true
-        type: string
 
 jobs:
   grant-access:
