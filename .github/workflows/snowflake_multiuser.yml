@@ -6,6 +6,7 @@ on:
       target_users:
         description: "Comma-separated Snowflake usernames"
         required: true
+        type: string
 
 jobs:
   grant-access:
