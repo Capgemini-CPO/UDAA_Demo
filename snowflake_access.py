@@ -3,7 +3,7 @@ import os
 import snowflake.connector
 
 # --------------------------------------------------
-# READ ENV VARIABLES
+# CONNECT TO SNOWFLAKE
 # --------------------------------------------------
 conn = snowflake.connector.connect(
     user=os.environ["SNOWFLAKE_USER"],
@@ -21,52 +21,74 @@ def execute(sql):
     cur.execute(sql)
 
 
+def exists(sql):
+    cur.execute(sql)
+    return cur.fetchone() is not None
+
+
 # --------------------------------------------------
-# LOAD CONFIG.JSON
+# LOAD CONFIG
 # --------------------------------------------------
-with open("config.json", "r") as f:
+with open("config.json") as f:
     data = json.load(f)
 
-role = data["role"]                     # REQUIRED
-permissions = data["permissions"]       # REQUIRED
-users = data.get("users", [])            # OPTIONAL
+role = data["role"]
+permissions = data["permissions"]
+users = data.get("users", [])
 
 
 # --------------------------------------------------
-# USE ADMIN ROLE
+# SET ADMIN ROLE
 # --------------------------------------------------
 execute("USE ROLE SECURITYADMIN")
 
 
 # --------------------------------------------------
-# ENSURE ROLE EXISTS
+# CREATE ROLE IF MISSING
 # --------------------------------------------------
 execute(f"CREATE ROLE IF NOT EXISTS {role}")
 
 
 # --------------------------------------------------
-# ASSIGN ROLE TO USERS (OPTIONAL)
+# ASSIGN ROLE TO USERS
 # --------------------------------------------------
 for user in users:
     execute(f'GRANT ROLE {role} TO USER "{user}"')
 
 
 # --------------------------------------------------
-# GRANT PERMISSIONS TO ROLE
+# APPLY PERMISSIONS SAFELY
 # --------------------------------------------------
 for perm in permissions:
-    object_type = perm["object_type"].upper()
-    object_name = perm["object_name"]
+    obj_type = perm["object_type"].upper()
+    obj_name = perm["object_name"]
     privileges = perm["privileges"]
+    parts = obj_name.split(".")
+
+    skip = False
+
+    if obj_type == "DATABASE":
+        if not exists(f"SHOW DATABASES LIKE '{parts[0]}'"):
+            print(f" Skipping: Database does not exist -> {parts[0]}")
+            skip = True
+
+    elif obj_type == "SCHEMA":
+        if not exists(f"SHOW SCHEMAS LIKE '{parts[1]}' IN DATABASE {parts[0]}"):
+            print(f" Skipping: Schema does not exist -> {obj_name}")
+            skip = True
+
+    elif obj_type == "TABLE":
+        if not exists(
+            f"SHOW TABLES LIKE '{parts[2]}' IN SCHEMA {parts[0]}.{parts[1]}"
+        ):
+            print(f" Skipping: Table does not exist -> {obj_name}")
+            skip = True
+
+    if skip:
+        continue
 
     for privilege in privileges:
-        sql = f"""
-        GRANT {privilege}
-        ON {object_type} {object_name}
-        TO ROLE {role}
-        """
-        execute(sql.strip())
-
+        execute(f"GRANT {privilege} ON {obj_type} {obj_name} TO ROLE {role}")
 
 # --------------------------------------------------
 # CLEANUP
@@ -74,4 +96,4 @@ for perm in permissions:
 cur.close()
 conn.close()
 
-print("Snowflake access provisioning completed successfully.")
+print(" Snowflake access provisioning completed successfully.")
