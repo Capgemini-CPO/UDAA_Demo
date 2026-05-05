@@ -17,7 +17,7 @@
     },
     {
       "grant_type": "TABLE",
-      "object_name": "GITHUB_ACTION_TEST",
+      "object_name": "EMPLOYEE",
       "privileges": ["SELECT"]
     }
   ]
