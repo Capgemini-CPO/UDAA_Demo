@@ -9,12 +9,12 @@
     },
     {
       "object_type": "SCHEMA",
-      "object_name": "MY_DATABASE.MY_SCHEMA",
+      "object_name": "MY_DATABASE.PUBLIC",
       "privileges": ["USAGE"]
     },
     {
       "object_type": "TABLE",
-      "object_name": "MY_DATABASE.MY_SCHEMA.EMPLOYEE",
+      "object_name": "MY_DATABASE.PUBLIC.EMPLOYEE",
       "privileges": ["SELECT"]
     }
   ]
