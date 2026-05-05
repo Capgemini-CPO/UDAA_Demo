@@ -83,7 +83,7 @@ def grant_permission(permission_obj, target_user):
 with open("config.json", "r") as f:
     data = json.load(f)
 
-target_user = data["user"]
+target_user = data["users"]
 
 # Loop through permissions
 for perm in data["permissions"]:
