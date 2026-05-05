@@ -74,5 +74,4 @@ for perm in permissions:
 cur.close()
 conn.close()
 
-print("✅ Snowflake access provisioning completed successfully.")
-``
+print("Snowflake access provisioning completed successfully.")
